@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Sender.Models
+namespace Receiver.Models
 {
     public class MoneyTransfer
     {

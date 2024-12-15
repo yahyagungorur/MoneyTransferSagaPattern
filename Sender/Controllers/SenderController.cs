@@ -33,7 +33,7 @@ namespace Sender.API.Controllers
                 SenderAccountId = moneyTransfer.SenderAccountId,
                 ReceiverAccountId = moneyTransfer.ReceiverAccountId,
                 TransferDate = DateTime.Now,
-                Status = TransferStatus.Suspend,
+                Status = Sender.Models.TransferStatus.Suspend,
                 TransferFee = moneyTransfer.TransferFee,
                 ResultMessage = "Transfer Waiting"
             };

@@ -10,5 +10,16 @@ namespace Shared
     {
         public int TranferId { get; set; }
         public string SuccessMessage { get; set; }
+        public TransferStatus Status { get; set; }
+
+    }
+
+    public enum TransferStatus
+    {
+        Suspend,
+        Completed,
+        Failed,
+        NotEnoughBalance,
+        NotFoundAccount
     }
 }

@@ -26,47 +26,49 @@ namespace Receiver.Consumers
 
         public async Task Consume(ConsumeContext<TransferCreatedEvent> context)
         {
-            var senderAccount =  _context.Accounts.FirstOrDefault(x => x.Id == context.Message.SenderAccountId);
+            var senderAccount =  _context.Account.FirstOrDefault(x => x.Id == context.Message.SenderAccountId);
+
             if (senderAccount != null) {
                 _logger.LogInformation($"Sender Balance(Before Transfer) :{senderAccount.Balance}");
                 if (senderAccount.Balance >= context.Message.TransferFee)
                 {
+
                     senderAccount.Balance -= context.Message.TransferFee;
                     _logger.LogInformation($"Sender Balance(During Transfer) :{senderAccount.Balance}");
 
-                    var receiverAccount =  _context.Accounts.FirstOrDefault(x => x.Id == context.Message.ReceiverAccountId);
+                    var receiverAccount =  _context.Account.FirstOrDefault(x => x.Id == context.Message.ReceiverAccountId);
                     if (receiverAccount != null)
                     {
-                        receiverAccount.Balance += context.Message.TransferFee;
-
-                         _publishEndpoint.Publish(new TransferCompletedEvent()
+                        await _publishEndpoint.Publish(new TransferCompletedEvent()
                         {
                             TranferId = context.Message.TransferId,
-                            SuccessMessage = "Money Transfer completed successfully"
+                            SuccessMessage = "Money Transfer completed successfully",
+                            Status = Shared.TransferStatus.Completed
                         });
 
                         _logger.LogInformation($"Transfer was successed:{context.Message.TransferId}");
-                        _logger.LogInformation($"Receiver Balance :{receiverAccount.Balance}");
+                        _logger.LogInformation($"Receiver Balance(After Transfer) :{receiverAccount.Balance}");
 
                     }
                     else
                     {
-                        senderAccount.Balance += context.Message.TransferFee;
-                         _publishEndpoint.Publish(new TransferFailedEvent()
+                       await  _publishEndpoint.Publish(new TransferFailedEvent()
                         {
                             TranferId = context.Message.TransferId,
-                            FailedMessage = "Receiver Account Not Found"
-                        });
+                            FailedMessage = "Receiver Account Not Found",
+                            Status = Shared.TransferStatus.Failed
+                       });
 
                         _logger.LogInformation($"Receiver Account Not Found Transfer Id :{context.Message.TransferId}");
                     }
                 }
                 else
                 {
-                     _publishEndpoint.Publish(new TransferFailedEvent()
+                    await _publishEndpoint.Publish(new TransferFailedEvent()
                     {
                         TranferId = context.Message.TransferId,
-                        FailedMessage = "Sender Account's Balance is not enough"
+                        FailedMessage = "Sender Account's Balance is not enough",
+                        Status = Shared.TransferStatus.NotEnoughBalance
                     });
 
                     _logger.LogInformation($"Senders Account's Balance is not enough Transfer Id :{context.Message.TransferId}");
@@ -75,10 +77,11 @@ namespace Receiver.Consumers
             }
             else
             {
-                 _publishEndpoint.Publish(new TransferFailedEvent()
+                await _publishEndpoint.Publish(new TransferFailedEvent()
                 {
                     TranferId = context.Message.TransferId,
-                    FailedMessage = "Sender Account Not Found"
+                    FailedMessage = "Sender Account Not Found",
+                    Status = Shared.TransferStatus.NotFoundAccount
                 });
 
                 _logger.LogInformation($"Sender Account Not Found Transfer Id :{context.Message.TransferId}");

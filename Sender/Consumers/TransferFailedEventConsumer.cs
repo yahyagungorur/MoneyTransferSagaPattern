@@ -29,11 +29,19 @@ namespace Sender.API.Consumers
 
                 if (transfer != null)
                 {
-                    transfer.Status = TransferStatus.Fail;
+                    transfer.Status = Sender.Models.TransferStatus.Failed;
                     transfer.ResultMessage = context.Message.FailedMessage;
-                    await _context.SaveChangesAsync();
 
                     _logger.LogInformation($"MoneyTransfer (Id={context.Message.TranferId}) failed !! Message : {context.Message.FailedMessage}");
+
+                    var senderAccount = _context.Account.FirstOrDefault(x => x.Id == transfer.SenderAccountId);
+                    if (senderAccount != null && context.Message.Status == Shared.TransferStatus.Failed)
+                    {
+                        senderAccount.Balance += transfer.TransferFee;
+                    }
+
+                    await _context.SaveChangesAsync();
+
                 }
                 else
                 {

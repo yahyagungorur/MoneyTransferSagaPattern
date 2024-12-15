@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Receiver.Models;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Receiver.Controllers
@@ -19,7 +20,14 @@ namespace Receiver.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            return Ok(await _context.Accounts.ToListAsync());
+            if (!_context.Account.Any())
+            {
+                _context.Account.Add(new Account() {  Balance = 100 });
+                _context.Account.Add(new Account() {  Balance = 100 });
+                _context.SaveChanges();
+            }
+      
+            return Ok(await _context.Account.ToListAsync());
         }
     }
 }

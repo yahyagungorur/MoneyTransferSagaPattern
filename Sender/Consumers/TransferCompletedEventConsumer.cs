@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Sender.Models;
 using Shared;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sender.API.Consumers
@@ -25,8 +26,16 @@ namespace Sender.API.Consumers
 
                 if (transfer != null)
                 {
-                    transfer.Status = TransferStatus.Complete;
+                    transfer.Status = Sender.Models.TransferStatus.Completed;
                     transfer.ResultMessage = context.Message.SuccessMessage;
+
+
+                    var receiverAccount = _context.Account.FirstOrDefault(x => x.Id == transfer.ReceiverAccountId);
+                    if (receiverAccount != null)
+                    {
+                        receiverAccount.Balance += transfer.TransferFee;
+                    }
+
                     await _context.SaveChangesAsync();
 
                     _logger.LogInformation($"MoneyTransfer (Id={context.Message.TranferId}) Succed !!! Message : {context.Message.SuccessMessage}");
